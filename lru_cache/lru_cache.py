@@ -1,5 +1,6 @@
 from doubly_linked_list import DoublyLinkedList
 
+
 class LRUCache:
     """
     Our LRUCache class keeps track of the max number of nodes it
@@ -8,11 +9,12 @@ class LRUCache:
     order, as well as a storage dict that provides fast access
     to every node stored in the cache.
     """
+
     def __init__(self, limit=10):
         self.limit = limit
-        self.current = 0
-        self.dict = {}
-        self.storage = DoublyLinkedList()
+        self.size = 0
+        self.order = DoublyLinkedList()
+        self.storage = dict()
 
     """
     Retrieves the value associated with the given key. Also
@@ -21,10 +23,11 @@ class LRUCache:
     Returns the value associated with the key or None if the
     key-value pair doesn't exist in the cache.
     """
+
     def get(self, key):
-        if key in self.dict:
-            node = self.dict[key]
-            self.storage.move_to_front(node)
+        if key in self.storage:
+            node = self.storage[key]
+            self.order.move_to_end(node)
             return node.value[1]
         else:
             return None
@@ -39,17 +42,22 @@ class LRUCache:
     want to overwrite the old value associated with the key with
     the newly-specified value.
     """
+
     def set(self, key, value):
-        if key in self.dict:
-            self.dict.get(key).value=(key, value)
-            self.storage.move_to_front(self.dict.get(key))
-        else:
-            self.storage.add_to_head((key, value))
-            self.dict[key] = self.storage.head
+        # Check and see if value is in tne cache
+        if key in self.storage:
+            node = self.storage[key]
+            node.value = (key, value)
+            self.order.remove_from_head()
+            return 
+        # If value is in the cache move to front and update value
+        if self.size == self.limit:
+            del self.storage[self.order.head.value[0]]
+            self.order.remove_from_head()
+            self.size -= 1
+        # Add to the front of the cache
 
-            if self.current >= self.limit:
-                self.dict.pop(self.storage.remove_from_tail()[0])
-            else:
-                self.current +=1
-
-   
+        # Defining tail as most recent and head as oldest
+        self.order.add_to_tail((key, value))
+        self.storage[key] = self.order.tail
+        self.size += 1
